@@ -49,9 +49,10 @@ class CabinetSceneCfg(InteractiveSceneCfg):
 
     # robots, Will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
+    robot_2: ArticulationCfg = MISSING
     # End-effector, Will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = MISSING
-
+    ee_frame_2: FrameTransformerCfg = MISSING
     cabinet = ArticulationCfg(
         prim_path="{ENV_REGEX_NS}/Cabinet",
         spawn=sim_utils.UsdFileCfg(
@@ -135,6 +136,7 @@ class ActionsCfg:
     """Action specifications for the MDP."""
 
     arm_action: mdp.JointPositionActionCfg = MISSING
+    arm_action_2: mdp.JointPositionActionCfg = MISSING
     gripper_action: mdp.BinaryJointPositionActionCfg = MISSING
 
 
@@ -217,8 +219,8 @@ class RewardsCfg:
     align_ee_handle = RewTerm(func=mdp.align_ee_handle, weight=0.5)
 
     # 2. Grasp the handle
-    approach_gripper_handle = RewTerm(func=mdp.approach_gripper_handle, weight=5.0, params={"offset": MISSING})
-    align_grasp_around_handle = RewTerm(func=mdp.align_grasp_around_handle, weight=0.125)
+    approach_gripper_handle = RewTerm(func=mdp.approach_gripper_handle, weight=1.0, params={"offset": MISSING})  # weight 5.0
+    align_grasp_around_handle = RewTerm(func=mdp.align_grasp_around_handle, weight=3.0)   # weight=0.125
     grasp_handle = RewTerm(
         func=mdp.grasp_handle,
         weight=0.5,
@@ -226,6 +228,7 @@ class RewardsCfg:
             "threshold": 0.03,
             "open_joint_pos": MISSING,
             "asset_cfg": SceneEntityCfg("robot", joint_names=MISSING),
+            "asset_cfg_2": SceneEntityCfg("robot_2", joint_names=MISSING),
         },
     )
 
@@ -263,7 +266,7 @@ class CabinetEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cabinet environment."""
 
     # Scene settings
-    scene: CabinetSceneCfg = CabinetSceneCfg(num_envs=4096, env_spacing=2.0)
+    scene: CabinetSceneCfg = CabinetSceneCfg(num_envs=256, env_spacing=2.0)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()

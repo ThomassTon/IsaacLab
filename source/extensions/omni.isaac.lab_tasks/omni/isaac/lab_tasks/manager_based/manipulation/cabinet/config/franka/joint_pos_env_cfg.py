@@ -17,7 +17,7 @@ from omni.isaac.lab_tasks.manager_based.manipulation.cabinet.cabinet_env_cfg imp
 ##
 # Pre-defined configs
 ##
-from omni.isaac.lab_assets.franka import FRANKA_PANDA_CFG  # isort: skip
+from omni.isaac.lab_assets.franka import FRANKA_PANDA_CFG, FRANKA_PANDA_CFG_DUAL  # isort: skip
 
 
 @configclass
@@ -28,7 +28,11 @@ class FrankaCabinetEnvCfg(CabinetEnvCfg):
 
         # Set franka as robot
         self.scene.robot = FRANKA_PANDA_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-
+        # print("dddddddddddddddddddd\n\n\n\n\n\n\n")
+        # print(self.scene.robot.prim_path)
+        self.scene.robot.init_state.pos = (0.0, 0.4, 0.0)
+        self.scene.robot_2 = FRANKA_PANDA_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot2")
+        self.scene.robot_2.init_state.pos = (-0.0, -0.4, 0.0)
         # Set Actions for the specific robot type (franka)
         self.actions.arm_action = mdp.JointPositionActionCfg(
             asset_name="robot",
@@ -36,8 +40,21 @@ class FrankaCabinetEnvCfg(CabinetEnvCfg):
             scale=1.0,
             use_default_offset=True,
         )
+        self.actions.arm_action_2 = mdp.JointPositionActionCfg(
+            asset_name="robot_2",
+            joint_names=["panda_joint.*"],
+            scale=1.0,
+            use_default_offset=True,
+        )
         self.actions.gripper_action = mdp.BinaryJointPositionActionCfg(
             asset_name="robot",
+            joint_names=["panda_finger.*"],
+            open_command_expr={"panda_finger_.*": 0.04},
+            close_command_expr={"panda_finger_.*": 0.0},
+        )
+        
+        self.actions.gripper_action_2 = mdp.BinaryJointPositionActionCfg(
+            asset_name="robot_2",
             joint_names=["panda_finger.*"],
             open_command_expr={"panda_finger_.*": 0.04},
             close_command_expr={"panda_finger_.*": 0.0},
@@ -74,12 +91,40 @@ class FrankaCabinetEnvCfg(CabinetEnvCfg):
                 ),
             ],
         )
+        self.scene.ee_frame_2 = FrameTransformerCfg(
+            prim_path="{ENV_REGEX_NS}/Robot2/panda_link0",
+            debug_vis=False,
+            visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/EndEffectorFrameTransformer"),
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot2/panda_hand",
+                    name="ee_tcp",
+                    offset=OffsetCfg(
+                        pos=(0.0, 0.0, 0.1034),
+                    ),
+                ),
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot2/panda_leftfinger",
+                    name="tool_leftfinger",
+                    offset=OffsetCfg(
+                        pos=(0.0, 0.0, 0.046),
+                    ),
+                ),
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot2/panda_rightfinger",
+                    name="tool_rightfinger",
+                    offset=OffsetCfg(
+                        pos=(0.0, 0.0, 0.046),
+                    ),
+                ),
+            ],
+        )
 
         # override rewards
         self.rewards.approach_gripper_handle.params["offset"] = 0.04
         self.rewards.grasp_handle.params["open_joint_pos"] = 0.04
         self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["panda_finger_.*"]
-
+        self.rewards.grasp_handle.params["asset_cfg_2"].joint_names = ["panda_finger_.*"]
 
 @configclass
 class FrankaCabinetEnvCfg_PLAY(FrankaCabinetEnvCfg):

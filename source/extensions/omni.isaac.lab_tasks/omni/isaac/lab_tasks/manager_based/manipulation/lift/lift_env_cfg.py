@@ -61,6 +61,43 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="/World/light",
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
     )
+    
+@configclass
+class ObjectTableSceneCfg_Bi(InteractiveSceneCfg):
+    """Configuration for the lift scene with a robot and a object.
+    This is the abstract base implementation, the exact scene is defined in the derived classes
+    which need to set the target object, robot and end-effector frames
+    """
+
+    # robots: will be populated by agent env cfg
+    robot: ArticulationCfg = MISSING
+    # robot2: ArticulationCfg = MISSING
+    # end-effector sensor: will be populated by agent env cfg
+    ee_frame: FrameTransformerCfg = MISSING
+    # ee_frame2: FrameTransformerCfg = MISSING
+
+    # target object: will be populated by agent env cfg
+    object: RigidObjectCfg | DeformableObjectCfg = MISSING
+
+    # Table
+    table = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/Table",
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.5, 0, 0], rot=[0.707, 0, 0, 0.707]),
+        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd"),
+    )
+
+    # plane
+    plane = AssetBaseCfg(
+        prim_path="/World/GroundPlane",
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, -1.05]),
+        spawn=GroundPlaneCfg(),
+    )
+
+    # lights
+    light = AssetBaseCfg(
+        prim_path="/World/light",
+        spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
+    )
 
 
 ##
@@ -82,6 +119,18 @@ class CommandsCfg:
         ),
     )
 
+class CommandsCfg_Bi:
+    """Command terms for the MDP."""
+
+    object_pose = mdp.UniformPoseCommandCfg(
+        asset_name="robot1",
+        body_name=MISSING,  # will be set by agent env cfg
+        resampling_time_range=(5.0, 5.0),
+        debug_vis=True,
+        ranges=mdp.UniformPoseCommandCfg.Ranges(
+            pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+        ),
+    )
 
 @configclass
 class ActionsCfg:
@@ -162,6 +211,35 @@ class RewardsCfg:
 
 
 @configclass
+class RewardsCfg_Bi:
+    """Reward terms for the MDP."""
+
+    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1}, weight=1.0)
+
+    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.04}, weight=15.0)
+
+    object_goal_tracking = RewTerm(
+        func=mdp.object_goal_distance,
+        params={"std": 0.3, "minimal_height": 0.04, "command_name": "object_pose"},
+        weight=16.0,
+    )
+
+    object_goal_tracking_fine_grained = RewTerm(
+        func=mdp.object_goal_distance,
+        params={"std": 0.05, "minimal_height": 0.04, "command_name": "object_pose"},
+        weight=5.0,
+    )
+
+    # action penalty
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-4)
+
+    joint_vel = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=-1e-4,
+        params={"asset_cfg": SceneEntityCfg("robot1")},
+    )
+
+@configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
@@ -196,6 +274,37 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
 
     # Scene settings
     scene: ObjectTableSceneCfg = ObjectTableSceneCfg(num_envs=4096, env_spacing=2.5)
+    # Basic settings
+    observations: ObservationsCfg = ObservationsCfg()
+    actions: ActionsCfg = ActionsCfg()
+    commands: CommandsCfg = CommandsCfg()
+    # MDP settings
+    rewards: RewardsCfg = RewardsCfg()
+    terminations: TerminationsCfg = TerminationsCfg()
+    events: EventCfg = EventCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
+
+    def __post_init__(self):
+        """Post initialization."""
+        # general settings
+        self.decimation = 2
+        self.episode_length_s = 5.0
+        # simulation settings
+        self.sim.dt = 0.01  # 100Hz
+        self.sim.render_interval = self.decimation
+
+        self.sim.physx.bounce_threshold_velocity = 0.2
+        self.sim.physx.bounce_threshold_velocity = 0.01
+        self.sim.physx.gpu_found_lost_aggregate_pairs_capacity = 1024 * 1024 * 4
+        self.sim.physx.gpu_total_aggregate_pairs_capacity = 16 * 1024
+        self.sim.physx.friction_correlation_distance = 0.00625
+        
+@configclass
+class LiftEnvCfg_Bi(ManagerBasedRLEnvCfg):
+    """Configuration for the lifting environment."""
+
+    # Scene settings
+    scene: ObjectTableSceneCfg_Bi = ObjectTableSceneCfg_Bi(num_envs=1024, env_spacing=5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
