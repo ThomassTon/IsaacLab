@@ -178,6 +178,7 @@ def run_simulator(sim: sim_utils.SimulationContext, entities: dict[str, Articula
             for index, robot in enumerate(entities.values()):
                 # root state
                 root_state = robot.data.default_root_state.clone()
+                print(root_state)
                 root_state[:, :3] += origins[index]
                 robot.write_root_state_to_sim(root_state)
                 # set joint positions

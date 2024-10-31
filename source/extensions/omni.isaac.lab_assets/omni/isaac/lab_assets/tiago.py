@@ -38,9 +38,9 @@ TIAGO_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
-            'base_x': 0.0, 
-            'base_y': 0.0, 
-            'base_r': 0.0, 
+            # 'base_x': 0.0, 
+            # 'base_y': 0.0, 
+            # 'base_r': 0.0, 
             'torso_lift_joint':0.35, 
             'arm_left_1_joint':0.0, 
             'arm_right_1_joint':0.0, 
@@ -66,28 +66,8 @@ TIAGO_CFG = ArticulationCfg(
         joint_vel={
             'base_x': 0.0, 
             'base_y': 0.0, 
-            'base_r': 0.5,   
-            'torso_lift_joint':0.05, 
-            'arm_left_1_joint':0.0, 
-            'arm_right_1_joint':0.0, 
-            'head_1_joint':0.3, 
-            'arm_left_2_joint':0.0, 
-            'arm_right_2_joint':0.0, 
-            'head_2_joint':0.2, 
-            'arm_left_3_joint':0, 
-            'arm_right_3_joint':0, 
-            'arm_left_4_joint':0.5, 
-            'arm_right_4_joint':0.3, 
-            'arm_left_5_joint':0.2, 
-            'arm_right_5_joint':0.7, 
-            'arm_left_6_joint':0.2, 
-            'arm_right_6_joint':0.5, 
-            'arm_left_7_joint':-0.3, 
-            'arm_right_7_joint':0.2, 
-            'gripper_left_left_finger_joint':0.04, 
-            'gripper_left_right_finger_joint':0.04, 
-            'gripper_right_left_finger_joint':0.04, 
-            'gripper_right_right_finger_joint':0.04
+            'base_r': 0.0,   
+
         },
         
     ),
@@ -96,7 +76,7 @@ TIAGO_CFG = ArticulationCfg(
             joint_names_expr=["torso_lift_joint"],
             # effort_limit=2000.0,
             velocity_limit=2.175,
-            stiffness=3e6,
+            stiffness=None,
             damping=None,
         ),
         "base": ImplicitActuatorCfg(
@@ -123,6 +103,14 @@ TIAGO_CFG = ArticulationCfg(
             stiffness=2e3,
             damping=1e2,
         ),
+        
+        # "tiago_hand_left": ImplicitActuatorCfg(
+        #     joint_names_expr=["gripper.*"],
+        #     # effort_limit=10.0,
+        #     # velocity_limit=0.2,
+        #     stiffness=2e3,
+        #     damping=1e2,
+        # ),
         
         "tiago_head": ImplicitActuatorCfg(
             joint_names_expr=["head.*"],

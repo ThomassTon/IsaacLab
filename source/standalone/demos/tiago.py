@@ -141,14 +141,14 @@ def run_simulator(sim: sim_utils.SimulationContext, entities: dict[str, Articula
             joint_pos_target[:,10:13] += torch.tensor([0.0001, 0.0001, 0.0001], device=joint_pos_target.device)
             joint_vel_target = robot.data.default_joint_vel
             # print("dd: ",joint_pos_target)
-            
+            print(robot.find_joints("arm_left_5_joint"))
             joint_pos_target = joint_pos_target.clamp_(
                 robot.data.soft_joint_pos_limits[:,:, 0], robot.data.soft_joint_pos_limits[:,:, 1]
             )
             robot.data.joint_pos
             # apply action to the robot
             # robot.set_joint_position_target(joint_pos_target,joint_ids=slice(0,24))
-            # robot.set_joint_position_target(joint_pos_target)
+            robot.set_joint_position_target(joint_pos_target)
             robot.set_joint_velocity_target(joint_vel_target)
             # robot.write_joint_state_to_sim(joint_pos_target, joint_vel_target)
             # write data to sim

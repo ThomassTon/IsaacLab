@@ -74,10 +74,10 @@ class PickSmState:
 class PickSmWaitTime:
     """Additional wait times (in s) for states for before switching."""
 
-    REST = wp.constant(0.2)
-    APPROACH_ABOVE_OBJECT = wp.constant(0.5)
-    APPROACH_OBJECT = wp.constant(0.6)
-    GRASP_OBJECT = wp.constant(0.3)
+    REST = wp.constant(1.3)
+    APPROACH_ABOVE_OBJECT = wp.constant(250)
+    APPROACH_OBJECT = wp.constant(250)
+    GRASP_OBJECT = wp.constant(0.2)
     LIFT_OBJECT = wp.constant(1.0)
 
 
@@ -107,16 +107,21 @@ def infer_state_machine(
             sm_state[tid] = PickSmState.APPROACH_ABOVE_OBJECT
             sm_wait_time[tid] = 0.0
     elif state == PickSmState.APPROACH_ABOVE_OBJECT:
+        # print(object_pose[tid])
+        # print(offset[tid])
         des_ee_pose[tid] = wp.transform_multiply(offset[tid], object_pose[tid])
+        print(des_ee_pose[tid])
+        # des_ee_pose[tid] = object_pose[tid]
         gripper_state[tid] = GripperState.OPEN
         # TODO: error between current and desired ee pose below threshold
         # wait for a while
-        if sm_wait_time[tid] >= PickSmWaitTime.APPROACH_OBJECT:
+        if sm_wait_time[tid] >= PickSmWaitTime.APPROACH_ABOVE_OBJECT:
             # move to next state and reset wait time
             sm_state[tid] = PickSmState.APPROACH_OBJECT
             sm_wait_time[tid] = 0.0
     elif state == PickSmState.APPROACH_OBJECT:
         des_ee_pose[tid] = object_pose[tid]
+        print(des_ee_pose[tid])
         gripper_state[tid] = GripperState.OPEN
         # TODO: error between current and desired ee pose below threshold
         # wait for a while
@@ -124,23 +129,23 @@ def infer_state_machine(
             # move to next state and reset wait time
             sm_state[tid] = PickSmState.GRASP_OBJECT
             sm_wait_time[tid] = 0.0
-    elif state == PickSmState.GRASP_OBJECT:
-        des_ee_pose[tid] = object_pose[tid]
-        gripper_state[tid] = GripperState.CLOSE
-        # wait for a while
-        if sm_wait_time[tid] >= PickSmWaitTime.GRASP_OBJECT:
-            # move to next state and reset wait time
-            sm_state[tid] = PickSmState.LIFT_OBJECT
-            sm_wait_time[tid] = 0.0
-    elif state == PickSmState.LIFT_OBJECT:
-        des_ee_pose[tid] = des_object_pose[tid]
-        gripper_state[tid] = GripperState.CLOSE
-        # TODO: error between current and desired ee pose below threshold
-        # wait for a while
-        if sm_wait_time[tid] >= PickSmWaitTime.LIFT_OBJECT:
-            # move to next state and reset wait time
-            sm_state[tid] = PickSmState.LIFT_OBJECT
-            sm_wait_time[tid] = 0.0
+    # elif state == PickSmState.GRASP_OBJECT:
+    #     des_ee_pose[tid] = object_pose[tid]
+    #     gripper_state[tid] = GripperState.CLOSE
+    #     # wait for a while
+    #     if sm_wait_time[tid] >= PickSmWaitTime.GRASP_OBJECT:
+    #         # move to next state and reset wait time
+    #         sm_state[tid] = PickSmState.LIFT_OBJECT
+    #         sm_wait_time[tid] = 0.0
+    # elif state == PickSmState.LIFT_OBJECT:
+    #     des_ee_pose[tid] = des_object_pose[tid]
+    #     gripper_state[tid] = GripperState.CLOSE
+    #     # TODO: error between current and desired ee pose below threshold
+    #     # wait for a while
+    #     if sm_wait_time[tid] >= PickSmWaitTime.LIFT_OBJECT:
+    #         # move to next state and reset wait time
+    #         sm_state[tid] = PickSmState.LIFT_OBJECT
+    #         sm_wait_time[tid] = 0.0
     # increment wait time
     sm_wait_time[tid] = sm_wait_time[tid] + dt[tid]
 
@@ -183,8 +188,8 @@ class PickAndLiftSm:
 
         # approach above object offset
         self.offset = torch.zeros((self.num_envs, 7), device=self.device)
-        self.offset[:, 2] = 0.1
-        self.offset[:, -1] = 1.0  # warp expects quaternion as (x, y, z, w)
+        self.offset[:, 2] = 0.07
+        self.offset[:, -1:] = 1.0  # warp expects quaternion as (x, y, z, w)
 
         # convert to warp
         self.sm_dt_wp = wp.from_torch(self.sm_dt, wp.float32)
@@ -249,17 +254,18 @@ def main():
     env = gym.make("Isaac-Lift-Cube-Tiago-IK-Abs-v0", cfg=env_cfg)
     # reset environment at start
     env.reset()
-
     # create action buffers (position + quaternion)
     actions = torch.zeros(env.unwrapped.action_space.shape, device=env.unwrapped.device)
     actions[:, 3] = 1.0
     # desired object orientation (we only do position control of object)
     desired_orientation = torch.zeros((env.unwrapped.num_envs, 4), device=env.unwrapped.device)
-    desired_orientation[:, 1] = 1.0
+    desired_orientation[:, 0] = 0.707
+    desired_orientation[:, 2] = -0.707
     # create state machine
     pick_sm = PickAndLiftSm(env_cfg.sim.dt * env_cfg.decimation, env.unwrapped.num_envs, env.unwrapped.device)
 
     while simulation_app.is_running():
+        # print()
         # run everything in inference mode
         with torch.inference_mode():
             # step environment
@@ -273,23 +279,27 @@ def main():
             # -- object frame
             object_data: RigidObjectData = env.unwrapped.scene["object"].data
             object_position = object_data.root_pos_w - env.unwrapped.scene.env_origins
+            # print("object:")
+            # print(desired_orientation)
             # -- target object frame
             desired_position = env.unwrapped.command_manager.get_command("object_pose")[..., :3]
-
+            # print("ee: ")
+            # print(tcp_rest_orientation)
             # advance state machine
             actions = pick_sm.compute(
                 torch.cat([tcp_rest_position, tcp_rest_orientation], dim=-1),
                 torch.cat([object_position, desired_orientation], dim=-1),
                 torch.cat([desired_position, desired_orientation], dim=-1),
             )
-
+            # print(pick_sm.sm_state)
             # reset state machine
-            if dones.any():
-                pick_sm.reset_idx(dones.nonzero(as_tuple=False).squeeze(-1))
-
+            # if dones.any():
+            #     print("reset")
+            #     pick_sm.reset_idx(dones.nonzero(as_tuple=False).squeeze(-1))
+            print(actions)
     # close the environment
     env.close()
-
+    # print("close")
 
 if __name__ == "__main__":
     # run the main function
