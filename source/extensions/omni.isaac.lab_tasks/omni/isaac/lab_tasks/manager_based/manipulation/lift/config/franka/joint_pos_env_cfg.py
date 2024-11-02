@@ -29,8 +29,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
 
         # Set Franka as robot
         self.scene.robot = TIAGO_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.robot.init_state.pos = (-1.2,0,0.001)
-        # Set actions for the specific robot type (franka)
+        self.scene.robot.init_state.pos = (-1.0,0,0.001)        # Set actions for the specific robot type (franka)
         self.actions.arm_action = mdp.JointPositionActionCfg(
             asset_name="robot", joint_names=["arm_left.*","torso_lift_joint"], use_default_offset=True
         )
@@ -44,7 +43,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
             close_command_expr={"gripper_left.*": 0.0},
         )
         # Set the body name for the end effector
-        self.commands.object_pose.body_name = "arm_left_7_link"
+        self.commands.object_pose.body_name = "gripper_left_grasping_frame_Z"   # "gripper_left_left_finger_link"
 
         # Set Cube as object
         self.scene.object = RigidObjectCfg(
@@ -68,16 +67,18 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
         marker_cfg = FRAME_MARKER_CFG.copy()
         marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
         marker_cfg.prim_path = "/Visuals/FrameTransformer"
+
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/world",
             debug_vis=False,
             visualizer_cfg=marker_cfg,
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/arm_left_7_link",
+                    prim_path="{ENV_REGEX_NS}/Robot/gripper_left_grasping_frame_Z",
                     name="end_effector",
                     offset=OffsetCfg(
-                        pos=[0.0, 0.0, 0.1034],
+                        pos=[0.0, 0.0, -0.07],
+                        # rot=[0.707, -0.707, 0.0, 0.0],
                     ),
                 ),
             ],

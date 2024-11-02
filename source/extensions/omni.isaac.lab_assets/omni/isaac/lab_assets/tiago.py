@@ -24,8 +24,8 @@ from omni.isaac.lab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
 TIAGO_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="/home/haolei/Isaac/src/IsaacLab/usd/tiago_dual_omni_pal_screen/tiago_dual_omni_pal_screen.usd",
-        activate_contact_sensors=False,
+        usd_path="usd/tiago_dual_omni_pal_screen/tiago_dual_omni_pal_screen.usd",                                      #"tiago_dual_omni_pal_screen/tiago_dual_omni_pal_screen.usd",
+        activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=10.0,
@@ -76,7 +76,7 @@ TIAGO_CFG = ArticulationCfg(
             joint_names_expr=["torso_lift_joint"],
             # effort_limit=2000.0,
             velocity_limit=2.175,
-            stiffness=None,
+            stiffness=2e10,
             damping=None,
         ),
         "base": ImplicitActuatorCfg(

@@ -41,7 +41,7 @@ class TiagoCubeLiftEnvCfg(joint_pos_env_cfg.TiagoCubeLiftEnvCfg):
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=["arm_left.*","torso_lift_joint"],
-            body_name="arm_left_7_link",
+            body_name="gripper_left_left_finger_link",
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="pinv"),
             body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0]),
         )

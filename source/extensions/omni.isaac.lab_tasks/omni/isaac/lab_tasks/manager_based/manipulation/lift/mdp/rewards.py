@@ -60,7 +60,7 @@ def object_ee_distance(
     ee_w = ee_frame.data.target_pos_w[..., 0, :]
     # Distance of the end-effector to the object: (num_envs,)
     object_ee_distance = torch.norm(cube_pos_w - ee_w, dim=1)
-    return (1 - torch.tanh(object_ee_distance / std))   ## make sure ee 
+    return (1 - torch.tanh(object_ee_distance / std)) * ((ee_w[...,-1]>cube_pos_w[...,-1])+0.05)  ## make sure ee 
 
 
 def object_goal_distance(
