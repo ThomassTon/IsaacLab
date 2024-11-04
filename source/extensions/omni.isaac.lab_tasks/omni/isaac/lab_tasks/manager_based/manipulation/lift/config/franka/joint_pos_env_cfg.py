@@ -51,7 +51,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
             init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.3, 0.3, 0.7801], rot=[1, 0, 0, 0]),
             spawn=UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Blocks/DexCube/dex_cube_instanceable.usd",
-                # scale=(0.8, 0.8, 0.8),
+                scale=(0.7, 0.7, 0.7),
                 rigid_props=RigidBodyPropertiesCfg(
                     solver_position_iteration_count=16,
                     solver_velocity_iteration_count=1,
@@ -77,7 +77,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
                     prim_path="{ENV_REGEX_NS}/Robot/gripper_left_grasping_frame_Z",
                     name="end_effector",
                     offset=OffsetCfg(
-                        pos=[0.0, 0.0, -0.07],
+                        pos=[0.0, 0.0, 0.07],
                         # rot=[0.707, -0.707, 0.0, 0.0],
                     ),
                 ),
