@@ -26,18 +26,18 @@ def approach_gripper_handle(env: ManagerBasedRLEnv, offset: float = 0.04) -> tor
     (i.e., the left finger is above the handle and the right finger is below the handle). Otherwise, it returns zero.
     """
     # Target object position: (num_envs, 3)
-    handle_pos = env.scene["cabinet_frame"].data.target_pos_w[..., 0, :]
+    handle_pos = env.scene["object"].data.root_pos_w
     # Fingertips position: (num_envs, n_fingertips, 3)
     ee_fingertips_w = env.scene["ee_frame"].data.target_pos_w[..., 1:, :]
     lfinger_pos = ee_fingertips_w[..., 0, :]
     rfinger_pos = ee_fingertips_w[..., 1, :]
 
     # Compute the distance of each finger from the handle
-    lfinger_dist = torch.abs(lfinger_pos[:, 2] - handle_pos[:, 2])
-    rfinger_dist = torch.abs(rfinger_pos[:, 2] - handle_pos[:, 2])
+    lfinger_dist = torch.abs(lfinger_pos[:, 1] - handle_pos[:, 1])
+    rfinger_dist = torch.abs(rfinger_pos[:, 1] - handle_pos[:, 1])
 
     # Check if hand is in a graspable pose
-    is_graspable = (rfinger_pos[:, 2] < handle_pos[:, 2]) & (lfinger_pos[:, 2] > handle_pos[:, 2])
+    is_graspable = (rfinger_pos[:, 1] < handle_pos[:, 1]) & (lfinger_pos[:, 1] > handle_pos[:, 1])
 
     return is_graspable * ((offset - lfinger_dist) + (offset - rfinger_dist))
 
@@ -54,7 +54,7 @@ def grasp_handle(
         It is assumed that zero joint position corresponds to the fingers being closed.
     """
     ee_tcp_pos = env.scene["ee_frame"].data.target_pos_w[..., 0, :]
-    handle_pos = env.scene["cabinet_frame"].data.target_pos_w[..., 0, :]
+    handle_pos = env.scene["object"].data.root_pos_w
     gripper_joint_pos = env.scene[asset_cfg.name].data.joint_pos[:, asset_cfg.joint_ids]
 
     distance = torch.norm(handle_pos - ee_tcp_pos, dim=-1, p=2)
@@ -125,7 +125,7 @@ def object_ee_distance(
     # alignment_reward = ee_euler_angles_flat*y_up_direction_flat
     # alignment_reward = (torch.dot(ee_euler_angles_flat, y_up_direction_flat) + 1) / 2
     # print(torch.abs(alignment_reward))
-    return (1 - torch.tanh(object_ee_distance / std)) * ((ee_w[...,-1]-cube_pos_w[...,-1])>0.01+0.05) #+ torch.abs(alignment_reward)  ## make sure ee 
+    return (1 - torch.tanh(object_ee_distance / std)) * ((ee_w[...,-1]-cube_pos_w[...,-1])>0.03+0.05) #+ torch.abs(alignment_reward)  ## make sure ee 
 
 
 def object_goal_distance(

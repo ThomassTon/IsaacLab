@@ -133,10 +133,10 @@ def run_simulator(sim: sim_utils.SimulationContext, entities: dict[str, Articula
             # joint_pos_target = robot.data.default_joint_pos
             # print(joint_pos_target[:,10:12])
             
-            if robot.data.joint_pos[:,-1:] > 0.039:
-                joint_pos_target[:,-4:]=0.0
-            elif robot.data.joint_pos[:,-1:] < 0.0001:
-                joint_pos_target[:,-4:]=0.04
+            # if robot.data.joint_pos[:,-1:] > 0.039:
+            #     joint_pos_target[:,-4:]=0.0
+            # elif robot.data.joint_pos[:,-1:] < 0.0001:
+            #     joint_pos_target[:,-4:]=0.04
             
             joint_pos_target[:,10:13] += torch.tensor([0.0001, 0.0001, 0.0001], device=joint_pos_target.device)
             joint_vel_target = robot.data.default_joint_vel

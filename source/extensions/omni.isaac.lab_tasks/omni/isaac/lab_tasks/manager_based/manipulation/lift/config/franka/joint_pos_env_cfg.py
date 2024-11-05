@@ -72,17 +72,36 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
             prim_path="{ENV_REGEX_NS}/Robot/world",
             debug_vis=False,
             visualizer_cfg=marker_cfg,
+            # source_frame_offset=OffsetCfg(rot=[0.707, -0.707, 0.0, 0.0]),
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
                     prim_path="{ENV_REGEX_NS}/Robot/gripper_left_grasping_frame_Z",
                     name="end_effector",
                     offset=OffsetCfg(
-                        pos=[0.0, 0.0, 0.07],
-                        # rot=[0.707, -0.707, 0.0, 0.0],
+                        pos=[0.0, 0.0, 0.09],
+                        # rot=[0, 1, 0.0, 0.0],
+                    ),
+                ),
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot/gripper_left_left_finger_link",
+                    name="tool_leftfinger",
+                    offset=OffsetCfg(
+                        pos=(0.0, 0.0, 0.046),
+                    ),
+                ),
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot/gripper_left_right_finger_link",
+                    name="tool_rightfinger",
+                    offset=OffsetCfg(
+                        pos=(0.0, 0.0, 0.046),
                     ),
                 ),
             ],
         )
+
+        self.rewards.approach_gripper_handle.params["offset"] = 0.01
+        self.rewards.grasp_handle.params["open_joint_pos"] = 0.01
+        self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["gripper_left_.*"]
 
 
 @configclass

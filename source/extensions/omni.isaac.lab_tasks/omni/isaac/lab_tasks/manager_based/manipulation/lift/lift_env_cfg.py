@@ -138,20 +138,33 @@ class EventCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.4}, weight=5.0)
+    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.4}, weight=2.0)
 
-    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.1}, weight=5.0) #0.04
+    # lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 0.1}, weight=10.0) #0.04
+# # 
+#     object_goal_tracking = RewTerm(
+#         func=mdp.object_goal_distance,
+#         params={"std": 0.3, "minimal_height": 0.01, "command_name": "object_pose"},
+#         weight=10.0,
+#     )
 
-    object_goal_tracking = RewTerm(
-        func=mdp.object_goal_distance,
-        params={"std": 0.3, "minimal_height": 0.04, "command_name": "object_pose"},
+    # object_goal_tracking_fine_grained = RewTerm(
+    #     func=mdp.object_goal_distance,
+    #     params={"std": 0.05, "minimal_height": 0.01, "command_name": "object_pose"},
+    #     weight=5.0,
+    # )
+
+
+    # grasp
+    approach_gripper_handle = RewTerm(func=mdp.approach_gripper_handle, weight=5.0, params={"offset": MISSING})
+    grasp_handle = RewTerm(
+        func=mdp.grasp_handle,
         weight=10.0,
-    )
-
-    object_goal_tracking_fine_grained = RewTerm(
-        func=mdp.object_goal_distance,
-        params={"std": 0.05, "minimal_height": 0.04, "command_name": "object_pose"},
-        weight=5.0,
+        params={
+            "threshold": 0.03,
+            "open_joint_pos": MISSING,
+            "asset_cfg": SceneEntityCfg("robot", joint_names=MISSING),
+        },
     )
 
     # action penalty
@@ -159,7 +172,7 @@ class RewardsCfg:
 
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2,
-        weight=-5e-4,     #weight=-1e-4,
+        weight=-1e-4,     #weight=-1e-4,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
