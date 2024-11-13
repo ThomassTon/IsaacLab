@@ -19,6 +19,8 @@ from scipy.spatial.transform import Rotation as R
 if TYPE_CHECKING:
     from omni.isaac.lab.envs import ManagerBasedRLEnv
 
+
+
 def approach_gripper_handle(env: ManagerBasedRLEnv, offset: float = 0.04) -> torch.Tensor:
     """Reward the robot's gripper reaching the drawer handle with the right pose.
 
@@ -67,26 +69,24 @@ def object_is_lifted(
 ) -> torch.Tensor:
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
-    return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0)
+    # is_graspable = approached_object(env)
+    # print(object.data.root_pos_w[:, 2])
+    return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.1) #* is_graspable
 
 
-# def object_ee_distance(
-#     env: ManagerBasedRLEnv,
-#     std: float,
-#     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
-#     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
-# ) -> torch.Tensor:
-#     """Reward the agent for reaching the object using tanh-kernel."""
-#     # extract the used quantities (to enable type-hinting)
-#     object: RigidObject = env.scene[object_cfg.name]
-#     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
-#     # Target object position: (num_envs, 3)
-#     cube_pos_w = object.data.root_pos_w
-#     # End-effector position: (num_envs, 3)
-#     ee_w = ee_frame.data.target_pos_w[..., 0, :]
-#     # Distance of the end-effector to the object: (num_envs,)
+# def approached_object(env: ManagerBasedRLEnv) -> torch.Tensor:
+#       # Target object position: (num_envs, 3)
+#     cube_pos_w = env.scene["object"].data.root_pos_w
+#     # Fingertips position: (num_envs, n_fingertips, 3)
+#     ee_w = env.scene["ee_frame"].data.target_pos_w[..., 0, :]
+#     cube_pos_w[...,-1] = cube_pos_w[...,-1]
+
 #     object_ee_distance = torch.norm(cube_pos_w - ee_w, dim=1)
-#     return (1 - torch.tanh(object_ee_distance / std))   ## make sure ee 
+#     # Check if hand is in a graspable pose
+#     is_graspable = object_ee_distance < 0.05
+#     # print(object_ee_distance)
+#     # bonus     if left finger is above the drawer handle and right below
+#     return is_graspable
 
 
 def object_ee_distance(
@@ -101,31 +101,13 @@ def object_ee_distance(
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
     # Target object position: (num_envs, 3)
     cube_pos_w = object.data.root_pos_w
+    cube_pos_w[...,-1] = cube_pos_w[...,-1]
     # End-effector position: (num_envs, 3)
     ee_w = ee_frame.data.target_pos_w[..., 0, :]
     # Distance of the end-effector to the object: (num_envs,)
     object_ee_distance = torch.norm(cube_pos_w - ee_w, dim=1)
-
-
-    # ee_quat = ee_frame.data.target_quat_w[..., 0, :]  # assuming y-axis direction in world frame
-    
-    # ee_quat_cpu = ee_quat.cpu().numpy()
-    # rotation = R.from_quat(ee_quat_cpu)
-    # ee_euler_angles = rotation.as_euler('xyz', degrees=True)
-
-    # ee_euler_angles = torch.tensor(ee_euler_angles,device=ee_quat.device )
-    # y_up_direction = torch.zeros_like(ee_euler_angles)
-    # y_up_direction[...,1] = 1.0
-    # # y_up_direction = torch.tensor([0.0, 1.0, 0.0], device=ee_quat.device)  # y-up direction
-    # # ee_euler_angles_flat = ee_euler_angles.flatten()
-    # # y_up_direction_flat = y_up_direction.flatten()
-
-    # ee_euler_angles_flat = ee_euler_angles.float()
-    # y_up_direction_flat = y_up_direction.float()   
-    # alignment_reward = ee_euler_angles_flat*y_up_direction_flat
-    # alignment_reward = (torch.dot(ee_euler_angles_flat, y_up_direction_flat) + 1) / 2
-    # print(torch.abs(alignment_reward))
-    return (1 - torch.tanh(object_ee_distance / std)) * ((ee_w[...,-1]-cube_pos_w[...,-1])>0.03+0.05) #+ torch.abs(alignment_reward)  ## make sure ee 
+    # print(1 - torch.tanh(object_ee_distance / std))
+    return (1 - torch.tanh(object_ee_distance / std)) #* ((ee_w[...,-1]-cube_pos_w[...,-1])>0.03+0.05) #+ torch.abs(alignment_reward)  ## make sure ee 
 
 
 def object_goal_distance(
