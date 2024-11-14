@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from omni.isaac.lab.assets import RigidObject
 from omni.isaac.lab.managers import SceneEntityCfg
 from omni.isaac.lab.sensors import FrameTransformer
-from omni.isaac.lab.utils.math import combine_frame_transforms
+from omni.isaac.lab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
 
 
 from scipy.spatial.transform import Rotation as R
@@ -74,26 +74,30 @@ def object_is_lifted(
     return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.1) #* is_graspable
 
 
-# def approached_object(env: ManagerBasedRLEnv) -> torch.Tensor:
-#       # Target object position: (num_envs, 3)
-#     cube_pos_w = env.scene["object"].data.root_pos_w
-#     # Fingertips position: (num_envs, n_fingertips, 3)
-#     ee_w = env.scene["ee_frame"].data.target_pos_w[..., 0, :]
-#     cube_pos_w[...,-1] = cube_pos_w[...,-1]
+def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    """Penalize tracking orientation error using shortest path.
 
-#     object_ee_distance = torch.norm(cube_pos_w - ee_w, dim=1)
-#     # Check if hand is in a graspable pose
-#     is_graspable = object_ee_distance < 0.05
-#     # print(object_ee_distance)
-#     # bonus     if left finger is above the drawer handle and right below
-#     return is_graspable
+    The function computes the orientation error between the desired orientation (from the command) and the
+    current orientation of the asset's body (in world frame). The orientation error is computed as the shortest
+    path between the desired and current orientations.
+    """
+    # extract the asset (to enable type hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    # obtain the desired and current orientations
+    des_quat_b = command[:, 3:7]
+    des_quat_w = quat_mul(asset.data.root_state_w[:, 3:7], des_quat_b)
+    curr_quat_w = asset.data.body_state_w[:, asset_cfg.body_ids[0], 3:7]  # type: ignore
+    return quat_error_magnitude(curr_quat_w, des_quat_w)
 
 
 def object_ee_distance(
     env: ManagerBasedRLEnv,
     std: float,
+    offset_z: float,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
+    
 ) -> torch.Tensor:
     """Reward the agent for reaching the object using tanh-kernel."""
     # extract the used quantities (to enable type-hinting)
@@ -101,12 +105,12 @@ def object_ee_distance(
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
     # Target object position: (num_envs, 3)
     cube_pos_w = object.data.root_pos_w
-    cube_pos_w[...,-1] = cube_pos_w[...,-1] + 0.05
+    cube_pos_w[...,-1] = cube_pos_w[...,-1] + offset_z
     # End-effector position: (num_envs, 3)
     ee_w = ee_frame.data.target_pos_w[..., 0, :]
     # Distance of the end-effector to the object: (num_envs,)
     object_ee_distance = torch.norm(cube_pos_w - ee_w, dim=1)
-    # print(1 - torch.tanh(object_ee_distance / std))
+    # print(ee_frame.data.target_quat_w[..., :, :])
     return (1 - torch.tanh(object_ee_distance / std)) #* ((ee_w[...,-1]-cube_pos_w[...,-1])>0.03+0.05) #+ torch.abs(alignment_reward)  ## make sure ee 
 
 

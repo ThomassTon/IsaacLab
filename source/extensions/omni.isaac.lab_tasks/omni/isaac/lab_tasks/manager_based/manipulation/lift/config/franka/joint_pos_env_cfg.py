@@ -98,7 +98,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
                 ),
             ],
         )
-
+        self.rewards.orientation_tracking.params["asset_cfg"].body_names = ["gripper_left_grasping_frame_Z"]
         # self.rewards.approach_gripper_handle.params["offset"] = 0.01
         # self.rewards.grasp_handle.params["open_joint_pos"] = 0.01
         # self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["gripper_left_.*"]
