@@ -78,7 +78,7 @@ class CommandsCfg:
         resampling_time_range=(5.0, 5.0),
         debug_vis=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.6, 0.6), pos_y=(0.25, 0.25), pos_z=(1.5,1.5), roll=(3.14, 3.14), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            pos_x=(0.6, 0.6), pos_y=(0.25, 0.25), pos_z=(1.5,1.5), roll=(3.14, 3.14), pitch=(-0.5, -0.5), yaw=(0.0, 0.0)
         ),
     )
 
@@ -141,7 +141,7 @@ class RewardsCfg:
     reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1, "offset_z" : 0.05}, weight=5.0)
 
     orientation_tracking  = RewTerm(
-        func=mdp.orientation_command_error,params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING),"command_name": "object_pose"},weight=-1.0)
+        func=mdp.orientation_command_error,params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING),"command_name": "object_pose"},weight=-0.1)
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 1.0}, weight=10.0)
 
     # object_goal_tracking = RewTerm(
