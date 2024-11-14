@@ -44,7 +44,7 @@ TIAGO_CFG = ArticulationCfg(
                        "torso_lift_joint": 0.35,
             # left arm
             "arm_left_1_joint": 0.0,
-            "arm_left_2_joint": 1.57,
+            "arm_left_2_joint": 0.0,
             "arm_left_3_joint": 1.5708,
             "arm_left_4_joint": 1.5708,
             # left wrist
@@ -53,7 +53,7 @@ TIAGO_CFG = ArticulationCfg(
             "arm_left_7_joint": 1.5708,
             # right arm
             "arm_right_1_joint": 0.0,
-            "arm_right_2_joint": 1.57,
+            "arm_right_2_joint": 0.0,
             "arm_right_3_joint": 1.5708,
             "arm_right_4_joint": 1.5708,
             # right wrist
