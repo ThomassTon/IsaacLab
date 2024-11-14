@@ -142,7 +142,7 @@ class RewardsCfg:
 
     orientation_tracking  = RewTerm(
         func=mdp.orientation_command_error,params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING),"command_name": "object_pose"},weight=-0.1)
-    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 1.0}, weight=5.0)
+    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 1.0}, weight=0.5)
 
     # object_goal_tracking = RewTerm(
     #     func=mdp.object_goal_distance,
