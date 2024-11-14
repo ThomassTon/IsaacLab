@@ -71,7 +71,7 @@ def object_is_lifted(
     object: RigidObject = env.scene[object_cfg.name]
     # is_graspable = approached_object(env)
     # print(object.data.root_pos_w[:, 2])
-    return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.1) #* is_graspable
+    return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0) #* is_graspable
 
 
 def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
