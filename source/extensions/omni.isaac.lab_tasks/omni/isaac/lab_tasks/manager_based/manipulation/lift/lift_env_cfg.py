@@ -127,7 +127,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.1, -0.1), "y": (0.25, 0.25), "z": (0.0, 0.0)},
+            "pose_range": {"x": (-0.1, -0.1), "y": (0.0, 0.25), "z": (0.0, 0.0)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("object", body_names="Object"),
         },
@@ -138,11 +138,11 @@ class EventCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1, "offset_z" : 0.01}, weight=7.0)
+    reaching_object = RewTerm(func=mdp.object_ee_distance, params={"std": 0.1, "offset_z" : 0.0}, weight=7.0)
 
-    orientation_tracking  = RewTerm(
-        func=mdp.orientation_command_error,params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING),"command_name": "object_pose"},weight=-0.1)
-    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 1.0}, weight=0.5)
+    # orientation_tracking  = RewTerm(
+        # func=mdp.orientation_command_error,params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING),"command_name": "object_pose"},weight=-0.1)
+    lifting_object = RewTerm(func=mdp.object_is_lifted, params={"minimal_height": 1.0}, weight=3.0)  #0.5
 
     # object_goal_tracking = RewTerm(
     #     func=mdp.object_goal_distance,

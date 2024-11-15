@@ -51,7 +51,7 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
             init_state=RigidObjectCfg.InitialStateCfg(pos=[-0.3, 0.3, 0.7801], rot=[1, 0, 0, 0]),
             spawn=UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Blocks/DexCube/dex_cube_instanceable.usd",
-                scale=(0.5, 0.5, 0.5),
+                scale=(0.6, 0.6, 0.6),
                 rigid_props=RigidBodyPropertiesCfg(
                     solver_position_iteration_count=16,
                     solver_velocity_iteration_count=1,
@@ -78,27 +78,27 @@ class TiagoCubeLiftEnvCfg(LiftEnvCfg):
                     prim_path="{ENV_REGEX_NS}/Robot/gripper_left_grasping_frame_Z",
                     name="end_effector",
                     offset=OffsetCfg(
-                        pos=[0.0, 0.0, 0.04],
+                        pos=[0.0, 0.0, 0.08],
                         # rot=[0, 1, 0.0, 0.0],
                     ),
                 ),
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/gripper_left_left_finger_link",
-                    name="tool_leftfinger",
-                    offset=OffsetCfg(
-                        pos=(0.0, 0.0, 0.046),
-                    ),
-                ),
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/gripper_left_right_finger_link",
-                    name="tool_rightfinger",
-                    offset=OffsetCfg(
-                        pos=(0.0, 0.0, 0.046),
-                    ),
-                ),
+                # FrameTransformerCfg.FrameCfg(
+                #     prim_path="{ENV_REGEX_NS}/Robot/gripper_left_left_finger_link",
+                #     name="tool_leftfinger",
+                #     offset=OffsetCfg(
+                #         pos=(0.0, 0.0, 0.046),
+                #     ),
+                # ),
+                # FrameTransformerCfg.FrameCfg(
+                #     prim_path="{ENV_REGEX_NS}/Robot/gripper_left_right_finger_link",
+                #     name="tool_rightfinger",
+                #     offset=OffsetCfg(
+                #         pos=(0.0, 0.0, 0.046),
+                #     ),
+                # ),
             ],
         )
-        self.rewards.orientation_tracking.params["asset_cfg"].body_names = ["gripper_left_grasping_frame_Z"]
+        # self.rewards.orientation_tracking.params["asset_cfg"].body_names = ["gripper_left_grasping_frame_Z"]
         # self.rewards.approach_gripper_handle.params["offset"] = 0.01
         # self.rewards.grasp_handle.params["open_joint_pos"] = 0.01
         # self.rewards.grasp_handle.params["asset_cfg"].joint_names = ["gripper_left_.*"]
