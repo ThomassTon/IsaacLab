@@ -72,8 +72,8 @@ def object_is_lifted(
     ee_tcp_pos = env.scene["ee_frame"].data.target_pos_w[..., 0, :]
     # is_graspable = approached_object(env)
     # print(torch.mean(object.data.root_pos_w[:, 2] - 0.8))
-    return torch.where(object.data.root_pos_w[:, 2] > minimal_height & ee_tcp_pos[:,-1]> minimal_height, 1.0, 0.0) #* is_graspable
-    # return torch.mean(object.data.root_pos_w[:, 2] > 0.8)
+    # return torch.where(torch.logical_and(object.data.root_pos_w[:, 2] > minimal_height, ee_tcp_pos[:, -1] > minimal_height),1.0, 0.0) #* is_graspable
+    return torch.mean(object.data.root_pos_w[:, 2] - 0.7781)
 
 def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
     """Penalize tracking orientation error using shortest path.
