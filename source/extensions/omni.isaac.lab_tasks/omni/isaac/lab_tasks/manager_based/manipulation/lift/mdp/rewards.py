@@ -69,11 +69,7 @@ def object_is_lifted(
 ) -> torch.Tensor:
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
-    ee_tcp_pos = env.scene["ee_frame"].data.target_pos_w[..., 0, :]
-    # is_graspable = approached_object(env)
-    # print(torch.mean(object.data.root_pos_w[:, 2] - 0.8))
-    # return torch.where(torch.logical_and(object.data.root_pos_w[:, 2] > minimal_height, ee_tcp_pos[:, -1] > minimal_height),1.0, 0.0) #* is_graspable
-    return torch.mean(object.data.root_pos_w[:, 2] - 0.7781)
+    return torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0)
 
 def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
     """Penalize tracking orientation error using shortest path.
@@ -95,7 +91,6 @@ def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_c
 def object_ee_distance(
     env: ManagerBasedRLEnv,
     std: float,
-    offset_z: float,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
     
@@ -106,7 +101,7 @@ def object_ee_distance(
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
     # Target object position: (num_envs, 3)
     cube_pos_w = object.data.root_pos_w
-    cube_pos_w[...,-1] = cube_pos_w[...,-1] + offset_z
+    cube_pos_w[...,-1] = cube_pos_w[...,-1] + 0.02
     # End-effector position: (num_envs, 3)
     ee_w = ee_frame.data.target_pos_w[..., 0, :]
     # Distance of the end-effector to the object: (num_envs,)
@@ -125,7 +120,6 @@ def object_goal_distance(
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    # print("use reward function")
     """Reward the agent for tracking the goal pose using tanh-kernel."""
     # extract the used quantities (to enable type-hinting)
     robot: RigidObject = env.scene[robot_cfg.name]
